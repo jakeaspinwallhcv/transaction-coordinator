@@ -86,8 +86,13 @@ document.getElementById('contract-form').addEventListener('submit', async (e) =>
   const fileInput = document.getElementById('contract-file');
   if (!fileInput.files.length) return;
   const file = fileInput.files[0];
-  const text = await file.text();
-  const content = btoa(text);
+  const buffer = await file.arrayBuffer();
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const content = btoa(binary);
   const tx = await fetchJSON('/api/contracts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

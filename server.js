@@ -7,6 +7,32 @@ const DATA_FILE = path.join(__dirname, 'data', 'transactions.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const CONTRACT_DIR = path.join(__dirname, 'data', 'contracts');
 
+function parseContractText(text) {
+  const lines = text.split(/\r?\n/);
+  const details = { property: '', buyer: '', seller: '', tasks: [] };
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const idx = trimmed.indexOf(':');
+    if (idx === -1) continue;
+    const key = trimmed.slice(0, idx).toLowerCase();
+    const value = trimmed.slice(idx + 1).trim();
+    if (key.includes('property')) details.property = value;
+    else if (key.includes('buyer')) details.buyer = value;
+    else if (key.includes('seller')) details.seller = value;
+    else if (key.includes('task')) {
+      const match = value.match(/(.*?)(?:due\s*(.*))?$/i);
+      details.tasks.push({ description: (match && match[1].trim()) || value, dueDate: (match && match[2] || '').trim(), completed: false });
+    }
+  }
+  return details;
+}
+
+function extractTextFromPDF(buffer) {
+  const content = buffer.toString('latin1');
+  const matches = content.match(/\(([^()]*)\)\s*Tj/g) || [];
+  return matches.map(m => m.slice(1, m.lastIndexOf(')'))).join('\n');
+}
+
 function readTransactions() {
   try {
     const data = fs.readFileSync(DATA_FILE, 'utf8');
@@ -58,14 +84,25 @@ const server = http.createServer(async (req, res) => {
   if (req.url.startsWith('/api/contracts') && req.method === 'POST') {
     try {
       const { name, content } = await parseBody(req);
-      const raw = Buffer.from(content || '', 'base64').toString('utf8');
-      const details = JSON.parse(raw);
+      const buffer = Buffer.from(content || '', 'base64');
+      const ext = path.extname(name || '').toLowerCase();
+      let text = '';
+      if (ext === '.pdf') {
+        text = extractTextFromPDF(buffer);
+      } else if (['.png', '.jpg', '.jpeg'].includes(ext)) {
+        // Very naive placeholder: parse details from file name
+        text = (name || '').replace(/[_-]/g, '\n');
+      } else {
+        text = buffer.toString('utf8');
+      }
+
+      const details = parseContractText(text);
       let transactions = readTransactions();
-      const tx = { id: randomUUID(), property: details.property || '', buyer: details.buyer || '', seller: details.seller || '', tasks: [] };
+      const tx = { id: randomUUID(), property: details.property || '', buyer: details.buyer || '', seller: details.seller || '', tasks: details.tasks };
       transactions.push(tx);
       writeTransactions(transactions);
       fs.mkdirSync(CONTRACT_DIR, { recursive: true });
-      fs.writeFileSync(path.join(CONTRACT_DIR, `${tx.id}-${name || 'contract.txt'}`), raw);
+      fs.writeFileSync(path.join(CONTRACT_DIR, `${tx.id}-${name || 'contract' + ext}`), buffer);
       res.writeHead(201, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify(tx));
     } catch (err) {
