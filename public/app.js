@@ -23,6 +23,15 @@ function renderTransaction(tx) {
   wrapper.appendChild(title);
   wrapper.appendChild(parties);
 
+  const archiveBtn = document.createElement('button');
+  archiveBtn.textContent = 'Archive';
+  archiveBtn.className = 'archive-btn';
+  archiveBtn.addEventListener('click', async () => {
+    await fetchJSON(`/api/transactions/${tx.id}/archive`, { method: 'PATCH' });
+    wrapper.remove();
+  });
+  wrapper.appendChild(archiveBtn);
+
   const list = document.createElement('div');
   tx.tasks.forEach(task => list.appendChild(renderTask(task, tx.id)));
   wrapper.appendChild(list);
@@ -81,11 +90,10 @@ document.getElementById('transaction-form').addEventListener('submit', async (e)
   e.target.reset();
 });
 
-document.getElementById('contract-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const fileInput = document.getElementById('contract-file');
-  if (!fileInput.files.length) return;
-  const file = fileInput.files[0];
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('contract-file');
+
+async function handleContract(file) {
   const buffer = await file.arrayBuffer();
   let binary = '';
   const bytes = new Uint8Array(buffer);
@@ -99,7 +107,26 @@ document.getElementById('contract-form').addEventListener('submit', async (e) =>
     body: JSON.stringify({ name: file.name, content })
   });
   document.getElementById('transactions').appendChild(renderTransaction(tx));
-  e.target.reset();
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) {
+    handleContract(e.dataTransfer.files[0]);
+  }
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) {
+    handleContract(fileInput.files[0]);
+    fileInput.value = '';
+  }
 });
 
 loadTransactions();
