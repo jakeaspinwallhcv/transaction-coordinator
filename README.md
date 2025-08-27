@@ -9,3 +9,7 @@ A minimal web app to help real estate professionals coordinate tasks after a pur
 
 Transactions and tasks are stored in `data/transactions.json`.
 
+## Uploading Contracts
+
+Upload a signed contract (JSON or text file with `property`, `buyer`, and `seller` fields) through the interface to automatically create a new transaction. Uploaded contracts are saved under `data/contracts`.
+
