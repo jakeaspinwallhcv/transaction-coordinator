@@ -81,4 +81,20 @@ document.getElementById('transaction-form').addEventListener('submit', async (e)
   e.target.reset();
 });
 
+document.getElementById('contract-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fileInput = document.getElementById('contract-file');
+  if (!fileInput.files.length) return;
+  const file = fileInput.files[0];
+  const text = await file.text();
+  const content = btoa(text);
+  const tx = await fetchJSON('/api/contracts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: file.name, content })
+  });
+  document.getElementById('transactions').appendChild(renderTransaction(tx));
+  e.target.reset();
+});
+
 loadTransactions();
