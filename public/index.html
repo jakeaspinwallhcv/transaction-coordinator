@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction Coordinator</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Transaction Coordinator</h1>
+  </header>
+  <main>
+    <section class="new-transaction">
+      <h2>New Transaction</h2>
+      <form id="transaction-form">
+        <input type="text" id="property" placeholder="Property Address" required />
+        <input type="text" id="buyer" placeholder="Buyer" required />
+        <input type="text" id="seller" placeholder="Seller" required />
+        <button type="submit">Add</button>
+      </form>
+    </section>
+    <section>
+      <h2>Transactions</h2>
+      <div id="transactions"></div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
