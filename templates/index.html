@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Transaction Coordinator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+</head>
+<body>
+    <h1>Transactions</h1>
+
+    <section>
+        <h2>Create Transaction</h2>
+        <form action="{{ url_for('create') }}" method="post">
+            <label>Property Address
+                <input type="text" name="address" required>
+            </label>
+            <label>Closing Date
+                <input type="date" name="closing_date" required>
+            </label>
+            <button type="submit">Create</button>
+        </form>
+    </section>
+
+    {% for tid, tx in transactions.items() %}
+    <section>
+        <h2>{{ tx.property_address }} <small>(closing {{ tx.closing_date }})</small></h2>
+        <ul>
+            {% for task in tx.tasks %}
+            <li>
+                {% if task.completed %}
+                    ✅ {{ task.description }} (due {{ task.due_date }})
+                {% else %}
+                    <form action="{{ url_for('complete_task_route', transaction_id=tid, task_index=loop.index0) }}" method="post" style="display:inline;">
+                        <button type="submit">Mark done</button>
+                    </form>
+                    {{ task.description }} (due {{ task.due_date }})
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+
+        <form action="{{ url_for('add_task_route', transaction_id=tid) }}" method="post">
+            <label>Description
+                <input type="text" name="description" required>
+            </label>
+            <label>Due Date
+                <input type="date" name="due_date" required>
+            </label>
+            <button type="submit">Add Task</button>
+        </form>
+    </section>
+    {% endfor %}
+
+</body>
+</html>
