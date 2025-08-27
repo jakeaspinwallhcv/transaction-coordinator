@@ -11,5 +11,5 @@ Transactions and tasks are stored in `data/transactions.json`.
 
 ## Uploading Contracts
 
-Upload a signed contract (JSON or text file with `property`, `buyer`, and `seller` fields) through the interface to automatically create a new transaction. Uploaded contracts are saved under `data/contracts`.
+Upload a signed contract as JSON, plain text, PDF, or an image. The server attempts to extract lines such as `Property:`, `Buyer:`, `Seller:` and `Task:` to build the transaction and its initial tasks. Images are parsed using their file name as a fallback. Uploaded contracts are saved under `data/contracts`.
 
