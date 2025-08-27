@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction Coordinator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>Transaction Coordinator</h1>
+    <p>Keep every deal organized in one place.</p>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Start a New Transaction</h2>
+      <form id="transaction-form">
+        <label>
+          Client Name
+          <input type="text" name="client" required />
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          Details
+          <textarea name="details" rows="4"></textarea>
+        </label>
+        <button type="submit">Save</button>
+      </form>
+    </section>
+  </main>
+  <footer>
+    <small>© 2024 Transaction Coordinator</small>
+  </footer>
+
+  <script>
+    document.getElementById('transaction-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      alert('Transaction saved!');
+      this.reset();
+    });
+  </script>
+</body>
+</html>
