@@ -98,7 +98,7 @@ const server = http.createServer(async (req, res) => {
 
       const details = parseContractText(text);
       let transactions = readTransactions();
-      const tx = { id: randomUUID(), property: details.property || '', buyer: details.buyer || '', seller: details.seller || '', tasks: details.tasks };
+      const tx = { id: randomUUID(), property: details.property || '', buyer: details.buyer || '', seller: details.seller || '', tasks: details.tasks, archived: false };
       transactions.push(tx);
       writeTransactions(transactions);
       fs.mkdirSync(CONTRACT_DIR, { recursive: true });
@@ -117,14 +117,15 @@ const server = http.createServer(async (req, res) => {
     let transactions = readTransactions();
 
     if (parts.length === 2 && method === 'GET') {
+      const active = transactions.filter(t => !t.archived);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify(transactions));
+      return res.end(JSON.stringify(active));
     }
 
     if (parts.length === 2 && method === 'POST') {
       try {
         const data = await parseBody(req);
-        const tx = { id: randomUUID(), property: data.property || '', buyer: data.buyer || '', seller: data.seller || '', tasks: [] };
+        const tx = { id: randomUUID(), property: data.property || '', buyer: data.buyer || '', seller: data.seller || '', tasks: [], archived: false };
         transactions.push(tx);
         writeTransactions(transactions);
         res.writeHead(201, { 'Content-Type': 'application/json' });
@@ -150,6 +151,15 @@ const server = http.createServer(async (req, res) => {
       } catch (err) {
         res.writeHead(400); return res.end('Invalid JSON');
       }
+    }
+
+    if (parts.length === 4 && parts[3] === 'archive' && method === 'PATCH') {
+      const tx = transactions.find(t => t.id === parts[2]);
+      if (!tx) { res.writeHead(404); return res.end('Transaction not found'); }
+      tx.archived = true;
+      writeTransactions(transactions);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(tx));
     }
 
     if (parts.length === 5 && parts[3] === 'tasks' && method === 'PATCH') {
