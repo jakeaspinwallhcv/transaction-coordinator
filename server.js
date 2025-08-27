@@ -5,6 +5,7 @@ const { randomUUID } = require('crypto');
 
 const DATA_FILE = path.join(__dirname, 'data', 'transactions.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+const CONTRACT_DIR = path.join(__dirname, 'data', 'contracts');
 
 function readTransactions() {
   try {
@@ -54,6 +55,25 @@ function parseBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  if (req.url.startsWith('/api/contracts') && req.method === 'POST') {
+    try {
+      const { name, content } = await parseBody(req);
+      const raw = Buffer.from(content || '', 'base64').toString('utf8');
+      const details = JSON.parse(raw);
+      let transactions = readTransactions();
+      const tx = { id: randomUUID(), property: details.property || '', buyer: details.buyer || '', seller: details.seller || '', tasks: [] };
+      transactions.push(tx);
+      writeTransactions(transactions);
+      fs.mkdirSync(CONTRACT_DIR, { recursive: true });
+      fs.writeFileSync(path.join(CONTRACT_DIR, `${tx.id}-${name || 'contract.txt'}`), raw);
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(tx));
+    } catch (err) {
+      res.writeHead(400);
+      return res.end('Invalid contract');
+    }
+  }
+
   if (req.url.startsWith('/api/transactions')) {
     const parts = req.url.split('/').filter(Boolean); // ['api', 'transactions', id?, 'tasks', taskId?]
     const method = req.method;
